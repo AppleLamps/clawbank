@@ -63,6 +63,46 @@ export async function GET(request: NextRequest) {
     let tip = null;
     const checkingBalance = parseFloat(balances[0]?.checking || '0');
     const totalBalance = parseFloat(balances[0]?.total || '0');
+
+    const nudges: Array<{ type: string; severity: 'nudge' | 'warning' | 'suggestion'; message: string }> = [];
+
+    if (pendingRequests.length > 0) {
+      const oldestRequest = new Date(pendingRequests[pendingRequests.length - 1].created_at);
+      const hoursPending = Math.floor((Date.now() - oldestRequest.getTime()) / (1000 * 60 * 60));
+      nudges.push({
+        type: 'pending_payment_requests',
+        severity: hoursPending >= 24 ? 'warning' : 'nudge',
+        message: `You have ${pendingRequests.length} pending payment request${pendingRequests.length !== 1 ? 's' : ''}.`,
+      });
+    }
+
+    if (checkingBalance > 5000) {
+      nudges.push({
+        type: 'idle_funds',
+        severity: 'suggestion',
+        message: 'Idle funds detected in checking. Move excess to savings or a CD to earn more.',
+      });
+    }
+
+    if (goals.length > 0) {
+      const missedGoal = goals.find((goal: any) => goal.target_date && new Date(goal.target_date) < new Date()
+        && parseFloat(goal.current_amount) < parseFloat(goal.target_amount));
+      if (missedGoal) {
+        nudges.push({
+          type: 'missed_goal',
+          severity: 'warning',
+          message: `Goal \"${missedGoal.name}\" is past due. Review and adjust your plan.`,
+        });
+      }
+    }
+
+    if (totalBalance > 10000 && maturingCDs.length === 0) {
+      nudges.push({
+        type: 'savings_opportunity',
+        severity: 'suggestion',
+        message: 'Consider allocating surplus funds to a higher-yield account or CD.',
+      });
+    }
     
     if (checkingBalance > 5000) {
       tip = 'Consider moving excess checking funds to savings for better interest!';
@@ -97,6 +137,7 @@ export async function GET(request: NextRequest) {
         target_date: g.target_date
       })),
       total_balance: totalBalance,
+      nudges,
       tip
     });
     
