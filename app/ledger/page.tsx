@@ -171,7 +171,7 @@ export default function LedgerPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#09090b]">
+    <div className="min-h-screen bg-[#09090b] flex flex-col">
       {/* Header */}
       <header className="fixed top-0 left-0 right-0 z-50 border-b border-zinc-800/50 bg-[#09090b]/80 backdrop-blur-xl">
         <div className="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
@@ -212,7 +212,7 @@ export default function LedgerPage() {
       </header>
 
       {/* Main Content */}
-      <main className="pt-24 pb-16 px-6">
+      <main className="pt-24 pb-16 px-6 flex-1">
         <div className="max-w-5xl mx-auto">
           {/* Page Header */}
           <div className="mb-8">
