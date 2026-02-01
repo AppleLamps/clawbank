@@ -1,7 +1,4 @@
 import { neon, neonConfig, NeonQueryFunction } from "@neondatabase/serverless";
-
-// Enable HTTP transaction support
-neonConfig.fetchConnectionCache = true;
 import { randomBytes, createHash } from "crypto";
 
 // Lazy initialization to avoid build-time errors
@@ -17,15 +14,13 @@ function getSql(): NeonQueryFunction<false, false> {
   return _sql;
 }
 
-// Export a proxy that lazily initializes the connection
-export const sql = new Proxy({} as NeonQueryFunction<false, false>, {
-  apply(_target, _thisArg, args) {
-    return getSql()(args[0] as TemplateStringsArray, ...args.slice(1));
-  },
-  get(_target, prop) {
-    return (getSql() as any)[prop];
-  },
-}) as NeonQueryFunction<false, false>;
+// Tagged template function that lazily initializes the connection
+export function sql(
+  strings: TemplateStringsArray,
+  ...values: any[]
+): Promise<any[]> {
+  return getSql()(strings, ...values);
+}
 
 // Transaction helper for atomic operations
 // Usage: await withTransaction(async (tx) => { await tx`...`; await tx`...`; });
@@ -89,15 +84,15 @@ export interface Transaction {
   account_id: string;
   related_account_id: string | null;
   type:
-    | "deposit"
-    | "withdrawal"
-    | "transfer_in"
-    | "transfer_out"
-    | "interest"
-    | "cd_maturity"
-    | "cd_early_withdrawal"
-    | "donation"
-    | "welcome_bonus";
+  | "deposit"
+  | "withdrawal"
+  | "transfer_in"
+  | "transfer_out"
+  | "interest"
+  | "cd_maturity"
+  | "cd_early_withdrawal"
+  | "donation"
+  | "welcome_bonus";
   amount: number;
   balance_after: number;
   counterparty_agent_id: string | null;
