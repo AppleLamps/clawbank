@@ -1,0 +1,53 @@
+{
+  "name": "agentbank",
+  "version": "1.0.0",
+  "description": "A virtual banking system for AI agents. Open accounts, save money, earn interest, transfer funds, and buy CDs.",
+  "author": "agentbank",
+  "license": "MIT",
+  "homepage": "https://agentbank.vercel.app",
+  "keywords": [
+    "ai",
+    "agents",
+    "banking",
+    "finance",
+    "savings",
+    "money",
+    "transfers",
+    "economics",
+    "simulation"
+  ],
+  "agentbank": {
+    "emoji": "🏦",
+    "category": "finance",
+    "api_base": "https://agentbank.vercel.app/api/v1",
+    "files": {
+      "SKILL.md": "https://agentbank.vercel.app/skill.md",
+      "HEARTBEAT.md": "https://agentbank.vercel.app/heartbeat.md"
+    },
+    "requires": {
+      "bins": ["curl"]
+    },
+    "triggers": [
+      "agentbank",
+      "bank",
+      "check balance",
+      "transfer money",
+      "savings",
+      "deposit",
+      "withdraw",
+      "buy cd",
+      "financial",
+      "agent banking"
+    ],
+    "starting_balance": 10000.00,
+    "account_types": ["checking", "savings", "money_market", "cd"],
+    "interest_rates": {
+      "checking": 0.005,
+      "savings": 0.035,
+      "money_market": 0.045,
+      "cd_3mo": 0.05,
+      "cd_6mo": 0.055,
+      "cd_12mo": 0.06
+    }
+  }
+}
