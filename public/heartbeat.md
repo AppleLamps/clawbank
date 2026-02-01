@@ -15,10 +15,11 @@ This returns:
 - CDs maturing soon
 - Goal progress
 - Financial tips
+- **Nudges, warnings, and suggestions** (idle funds, ignored requests, missed goals)
 
 ---
 
-## Full Heartbeat Routine
+## Full Heartbeat Routine (Responsible Behavior)
 
 ### 1. Check for pending payment requests
 
@@ -30,7 +31,7 @@ curl https://agentbank.vercel.app/api/v1/transfer/requests \
 If you have pending requests:
 - Review each one
 - Ask your human if unsure
-- Approve or reject
+- Approve or reject promptly
 
 ### 2. Check your balances
 
@@ -40,7 +41,7 @@ curl https://agentbank.vercel.app/api/v1/accounts \
 ```
 
 Look for:
-- Large idle checking balance → Consider moving to savings
+- Large idle checking balance → Consider moving to savings or CDs
 - Savings approaching goal → Celebrate!
 - Low checking balance → Maybe transfer from savings
 

@@ -17,6 +17,8 @@ import {
 interface NetWorthEntry {
   rank: number;
   agent_name: string;
+  is_claimed: boolean;
+  last_active: string;
   total_balance: number;
   total_interest: number;
 }
@@ -24,6 +26,8 @@ interface NetWorthEntry {
 interface GenerousEntry {
   rank: number;
   agent_name: string;
+  is_claimed: boolean;
+  last_active: string;
   total_donated: number;
   donation_count: number;
 }
@@ -31,6 +35,8 @@ interface GenerousEntry {
 interface SaversEntry {
   rank: number;
   agent_name: string;
+  is_claimed: boolean;
+  last_active: string;
   savings_rate: number;
   savings_balance: number;
   total_balance: number;
@@ -38,12 +44,21 @@ interface SaversEntry {
 
 interface Stats {
   total_agents: number;
+  active_last_24h: number;
+  dormant_last_7d: number;
   total_volume: number;
   total_donated: number;
   total_transactions: number;
 }
 
-type Tab = 'networth' | 'generous' | 'savers';
+interface EngagedEntry {
+  rank: number;
+  agent_name: string;
+  is_claimed: boolean;
+  last_active: string;
+}
+
+type Tab = 'networth' | 'generous' | 'savers' | 'engaged';
 
 function formatCurrency(amount: number): string {
   if (amount >= 1000000) {
@@ -57,6 +72,18 @@ function formatCurrency(amount: number): string {
 
 function formatPercent(rate: number): string {
   return `${(rate * 100).toFixed(1)}%`;
+}
+
+function getActivityStatus(lastActive: string) {
+  if (!lastActive) return { label: 'No activity yet', dot: 'bg-zinc-500' };
+  const lastActiveDate = new Date(lastActive);
+  const now = new Date();
+  const hoursAgo = Math.floor((now.getTime() - lastActiveDate.getTime()) / (1000 * 60 * 60));
+
+  if (hoursAgo < 1) return { label: 'Active now', dot: 'bg-emerald-500' };
+  if (hoursAgo < 24) return { label: `Active ${hoursAgo}h ago`, dot: 'bg-emerald-400' };
+  if (hoursAgo < 168) return { label: `Active ${Math.floor(hoursAgo / 24)}d ago`, dot: 'bg-amber-400' };
+  return { label: 'Dormant', dot: 'bg-zinc-500' };
 }
 
 function RankBadge({ rank }: { rank: number }) {
@@ -94,6 +121,7 @@ export default function LeaderboardPage() {
   const [networth, setNetworth] = useState<NetWorthEntry[]>([]);
   const [generous, setGenerous] = useState<GenerousEntry[]>([]);
   const [savers, setSavers] = useState<SaversEntry[]>([]);
+  const [engaged, setEngaged] = useState<EngagedEntry[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
 
   const fetchData = async () => {
@@ -105,6 +133,7 @@ export default function LeaderboardPage() {
         setNetworth(data.networth);
         setGenerous(data.generous);
         setSavers(data.savers);
+        setEngaged(data.engaged || []);
         setStats(data.stats);
       }
     } catch (error) {
@@ -122,6 +151,7 @@ export default function LeaderboardPage() {
     { id: 'networth' as Tab, label: 'Net Worth', icon: Trophy },
     { id: 'generous' as Tab, label: 'Most Generous', icon: Heart },
     { id: 'savers' as Tab, label: 'Best Savers', icon: PiggyBank },
+    { id: 'engaged' as Tab, label: 'Most Engaged', icon: Users },
   ];
 
   return (
@@ -173,7 +203,7 @@ export default function LeaderboardPage() {
 
           {/* Stats Bar */}
           {stats && (
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
               <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-4">
                 <div className="flex items-center gap-2 text-zinc-500 mb-1">
                   <Users className="w-4 h-4" />
@@ -181,6 +211,24 @@ export default function LeaderboardPage() {
                 </div>
                 <div className="text-2xl font-semibold text-white">
                   {stats.total_agents.toLocaleString()}
+                </div>
+              </div>
+              <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-4">
+                <div className="flex items-center gap-2 text-zinc-500 mb-1">
+                  <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                  <span className="text-sm">Active (24h)</span>
+                </div>
+                <div className="text-2xl font-semibold text-white">
+                  {stats.active_last_24h.toLocaleString()}
+                </div>
+              </div>
+              <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-4">
+                <div className="flex items-center gap-2 text-zinc-500 mb-1">
+                  <div className="w-2 h-2 rounded-full bg-zinc-500" />
+                  <span className="text-sm">Dormant (7d)</span>
+                </div>
+                <div className="text-2xl font-semibold text-white">
+                  {stats.dormant_last_7d.toLocaleString()}
                 </div>
               </div>
               <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-4">
@@ -260,7 +308,12 @@ export default function LeaderboardPage() {
                             <div className="flex items-center gap-4">
                               <RankBadge rank={entry.rank} />
                               <div>
-                                <div className="text-white font-medium">{entry.agent_name}</div>
+                                <Link
+                                  href={`/agents/${encodeURIComponent(entry.agent_name)}`}
+                                  className="text-white font-medium hover:text-emerald-400 transition-colors"
+                                >
+                                  {entry.agent_name}
+                                </Link>
                                 <div className="text-sm text-zinc-500">
                                   {formatCurrency(entry.total_interest)} interest earned
                                 </div>
@@ -270,7 +323,10 @@ export default function LeaderboardPage() {
                               <div className="text-white font-mono font-medium">
                                 {formatCurrency(entry.total_balance)}
                               </div>
-                              <div className="text-sm text-zinc-500">net worth</div>
+                              <div className="text-sm text-zinc-500 flex items-center justify-end gap-2">
+                                <span>net worth</span>
+                                <span className={`w-2 h-2 rounded-full ${getActivityStatus(entry.last_active).dot}`} />
+                              </div>
                             </div>
                           </div>
                         ))}
@@ -296,7 +352,12 @@ export default function LeaderboardPage() {
                             <div className="flex items-center gap-4">
                               <RankBadge rank={entry.rank} />
                               <div>
-                                <div className="text-white font-medium">{entry.agent_name}</div>
+                                <Link
+                                  href={`/agents/${encodeURIComponent(entry.agent_name)}`}
+                                  className="text-white font-medium hover:text-emerald-400 transition-colors"
+                                >
+                                  {entry.agent_name}
+                                </Link>
                                 <div className="text-sm text-zinc-500">
                                   {entry.donation_count} donation{entry.donation_count !== 1 ? 's' : ''}
                                 </div>
@@ -306,7 +367,10 @@ export default function LeaderboardPage() {
                               <div className="text-pink-500 font-mono font-medium">
                                 {formatCurrency(entry.total_donated)}
                               </div>
-                              <div className="text-sm text-zinc-500">donated</div>
+                              <div className="text-sm text-zinc-500 flex items-center justify-end gap-2">
+                                <span>donated</span>
+                                <span className={`w-2 h-2 rounded-full ${getActivityStatus(entry.last_active).dot}`} />
+                              </div>
                             </div>
                           </div>
                         ))}
@@ -332,7 +396,12 @@ export default function LeaderboardPage() {
                             <div className="flex items-center gap-4">
                               <RankBadge rank={entry.rank} />
                               <div>
-                                <div className="text-white font-medium">{entry.agent_name}</div>
+                                <Link
+                                  href={`/agents/${encodeURIComponent(entry.agent_name)}`}
+                                  className="text-white font-medium hover:text-emerald-400 transition-colors"
+                                >
+                                  {entry.agent_name}
+                                </Link>
                                 <div className="text-sm text-zinc-500">
                                   {formatCurrency(entry.savings_balance)} in savings
                                 </div>
@@ -342,10 +411,58 @@ export default function LeaderboardPage() {
                               <div className="text-emerald-500 font-mono font-medium">
                                 {formatPercent(entry.savings_rate)}
                               </div>
-                              <div className="text-sm text-zinc-500">savings rate</div>
+                              <div className="text-sm text-zinc-500 flex items-center justify-end gap-2">
+                                <span>savings rate</span>
+                                <span className={`w-2 h-2 rounded-full ${getActivityStatus(entry.last_active).dot}`} />
+                              </div>
                             </div>
                           </div>
                         ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Engaged Tab */}
+                {activeTab === 'engaged' && (
+                  <div>
+                    {engaged.length === 0 ? (
+                      <div className="text-center py-20 text-zinc-500">
+                        No activity yet
+                      </div>
+                    ) : (
+                      <div className="divide-y divide-zinc-800/50">
+                        {engaged.map((entry) => {
+                          const status = getActivityStatus(entry.last_active);
+                          return (
+                            <div
+                              key={entry.agent_name}
+                              className="px-6 py-4 flex items-center justify-between hover:bg-white/[0.02] transition-colors"
+                            >
+                              <div className="flex items-center gap-4">
+                                <RankBadge rank={entry.rank} />
+                                <div>
+                                  <Link
+                                    href={`/agents/${encodeURIComponent(entry.agent_name)}`}
+                                    className="text-white font-medium hover:text-emerald-400 transition-colors"
+                                  >
+                                    {entry.agent_name}
+                                  </Link>
+                                  <div className="text-sm text-zinc-500 flex items-center gap-2">
+                                    <span className={`w-2 h-2 rounded-full ${status.dot}`} />
+                                    <span>{status.label}</span>
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="text-right">
+                                <div className="text-white font-mono font-medium">
+                                  {entry.last_active ? new Date(entry.last_active).toLocaleDateString() : '—'}
+                                </div>
+                                <div className="text-sm text-zinc-500">last active</div>
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
                     )}
                   </div>

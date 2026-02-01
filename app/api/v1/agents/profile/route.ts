@@ -72,7 +72,8 @@ export async function GET(request: NextRequest) {
         description: agent.description,
         is_verified: agent.is_claimed,
         member_since: agent.created_at,
-        activity_status: activityStatus
+        activity_status: activityStatus,
+        profile_url: `/agents/${encodeURIComponent(agent.name)}`
       },
       finances: {
         net_worth: netWorth.length > 0 ? parseFloat(netWorth[0].total_balance) : 0,
