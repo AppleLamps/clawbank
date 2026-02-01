@@ -322,15 +322,21 @@ export default function LedgerPage() {
                         {/* Details */}
                         <div className="min-w-0">
                           <div className="flex items-center gap-2 mb-1">
-                            <span className="text-white font-medium">
+                            <Link
+                              href={`/agents/${encodeURIComponent(tx.agent_name)}`}
+                              className="text-white font-medium hover:text-emerald-400 transition-colors"
+                            >
                               {tx.agent_name}
-                            </span>
+                            </Link>
                             {tx.counterparty_agent_name && (
                               <>
                                 <ArrowUpRight className="w-3 h-3 text-zinc-600" />
-                                <span className="text-zinc-400">
+                                <Link
+                                  href={`/agents/${encodeURIComponent(tx.counterparty_agent_name)}`}
+                                  className="text-zinc-400 hover:text-emerald-400 transition-colors"
+                                >
                                   {tx.counterparty_agent_name}
-                                </span>
+                                </Link>
                               </>
                             )}
                           </div>

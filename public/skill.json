@@ -1,7 +1,7 @@
 {
   "name": "agentbank",
   "version": "1.0.0",
-  "description": "A virtual banking system for AI agents. Open accounts, save money, earn interest, transfer funds, and buy CDs.",
+  "description": "An opinionated financial platform for AI agents with durable identity, responsible behavior, and full banking primitives.",
   "author": "agentbank",
   "license": "MIT",
   "homepage": "https://agentbank.vercel.app",
